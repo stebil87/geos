@@ -18,8 +18,10 @@ CORS(
 )
 
 # === ENV VARIABLES ===
-MONGO_URI = os.environ.get("MONGO_URI", "mongodb://stebill87:Cquevino6+@ac-ysdacl0-shard-00-00.ylab820.mongodb.net:27017,ac-ysdacl0-shard-00-01.ylab820.mongodb.net:27017,ac-ysdacl0-shard-00-02.ylab820.mongodb.net:27017/geos?ssl=true&replicaSet=atlas-v7cvmn-shard-0&authSource=admin&retryWrites=true&w=majority")
-
+MONGO_URI = os.environ.get(
+    "MONGO_URI",
+    "mongodb+srv://stebill87:Cquevino6+@geos.ylab820.mongodb.net/geos?retryWrites=true&w=majority&tls=true"
+)
 
 EMAIL_USER = os.environ.get("EMAIL_USER", "webmaster@geos-services.ch")
 EMAIL_PASS = os.environ.get("EMAIL_PASS", "Cquevino6+++")
@@ -33,7 +35,7 @@ bookings = db["bookings"]
 def home():
     return "✅ GEOS Backend is running!"
 
-# === OPTIONS HANDLER ===
+# === OPTIONS + BOOKING ===
 @app.route("/submit-booking", methods=["POST", "OPTIONS"])
 def submit_booking():
     if request.method == "OPTIONS":
@@ -103,4 +105,5 @@ def after_request(response):
 
 # === ENTRYPOINT ===
 if __name__ == "__main__":
-    app.run()
+    port = int(os.environ.get("PORT", 10000))  # Render usa variabile PORT
+    app.run(host="0.0.0.0", port=port)         # Bind obbligatorio per Render
