@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from datetime import datetime
 import smtplib
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import os
 
 app = Flask(__name__)
@@ -23,8 +24,10 @@ MONGO_URI = os.environ.get(
     "mongodb+srv://stebill87:Cquevino6+@geos.ylab820.mongodb.net/geos?retryWrites=true&w=majority&tls=true"
 )
 
-EMAIL_USER = os.environ.get("EMAIL_USER", "webmaster@geos-services.ch")
-EMAIL_PASS = os.environ.get("EMAIL_PASS", "Cquevino6+++")
+EMAIL_USER = os.environ.get("EMAIL_USER", "test@example.com")
+EMAIL_PASS = os.environ.get("EMAIL_PASS", "")
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.mailersend.net")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
 
 # === DB CONNECTION ===
 client = MongoClient(MONGO_URI)
@@ -64,6 +67,7 @@ def submit_booking():
 
 # === EMAIL FUNCTION ===
 def send_confirmation_email(to_email, data):
+    subject = "Conferma richiesta – GEOS Services Ltd."
     body = f"""
 Grazie per la sua richiesta, che abbiamo ricevuto.
 
@@ -84,15 +88,23 @@ Sarete ricontattati entro 24 ore per una conferma.
 Cordiali saluti,
 GEOS Services Ltd.
 """
-    msg = MIMEText(body)
-    msg["Subject"] = "Conferma richiesta – GEOS Services Ltd."
-    msg["From"] = EMAIL_USER
-    msg["To"] = to_email
 
-    with smtplib.SMTP("mail.hostpoint.ch", 587) as server:
+    msg = MIMEMultipart()
+    msg['From'] = EMAIL_USER
+    msg['To'] = to_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
         server.starttls()
         server.login(EMAIL_USER, EMAIL_PASS)
         server.send_message(msg)
+        server.quit()
+        print("✅ Email inviata.")
+    except Exception as e:
+        print("❌ Errore nell'invio email:", e)
+        raise
 
 # === CORS HEADERS POST-RESPONSE ===
 @app.after_request
@@ -105,5 +117,4 @@ def after_request(response):
 
 # === ENTRYPOINT ===
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))  # Render usa variabile PORT
-    app.run(host="0.0.0.0", port=port)         # Bind obbligatorio per Render
+    app.run(host="0.0.0.0", port=10000)
